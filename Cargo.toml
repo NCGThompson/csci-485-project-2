@@ -12,3 +12,4 @@ name = "libproj2"
 path = "src/lib.rs"
 
 [dependencies]
+lina = "0.2.1"

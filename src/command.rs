@@ -1,27 +1,9 @@
-// For info on enums, run `rustup doc --book` and navigate to chapter 6.
+use lina::Point3;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum CMMD {
     Linear(LinearCMMD),
     Rotational(RotationalCMMD),
-}
-
-#[derive(Copy, Clone, PartialEq, Debug, Default)]
-pub struct LinearCMMD {
-    x: f64,
-    y: f64,
-    z: f64,
-}
-
-#[derive(Copy, Clone, PartialEq, Debug, Default)]
-pub struct RotationalCMMD {
-    ccw: bool,
-    x: f64,
-    y: f64,
-    z: f64,
-    i: f64,
-    j: f64,
-    k: f64,
 }
 
 impl std::str::FromStr for CMMD {
@@ -35,9 +17,22 @@ impl std::str::FromStr for CMMD {
     }
 }
 
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub struct LinearCMMD {
+    destination: Point3<f64>,
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub struct RotationalCMMD {
+    ccw: bool,
+    destination: Point3<f64>,
+    center: Point3<f64>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use lina::point3;
 
     #[test]
     #[ignore = "not yet implemented"]
@@ -45,41 +40,31 @@ mod tests {
         assert_eq!(
             "LIN X5 Y0 Z0".parse(),
             Ok(CMMD::Linear(LinearCMMD {
-                x: 5.0,
-                y: 0.0,
-                z: 0.0
+                destination: point3(5.0, 0.0, 0.0),
             }))
         );
         assert_eq!(
             "LIN X0 Y5 Z0".parse(),
             Ok(CMMD::Linear(LinearCMMD {
-                x: 0.0,
-                y: 5.0,
-                z: 0.0
+                destination: point3(0.0, 5.0, 0.0),
             }))
         );
         assert_eq!(
             "LIN X0 Y0 Z5".parse(),
             Ok(CMMD::Linear(LinearCMMD {
-                x: 0.0,
-                y: 0.0,
-                z: 5.0
+                destination: point3(0.0, 0.0, 5.0),
             }))
         );
         assert_eq!(
             "LIN X5 Y5 Z5".parse(),
             Ok(CMMD::Linear(LinearCMMD {
-                x: 5.0,
-                y: 5.0,
-                z: 5.0
+                destination: point3(5.0, 5.0, 5.0),
             }))
         );
         assert_eq!(
             "LIN X0 Y0 Z0".parse(),
             Ok(CMMD::Linear(LinearCMMD {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0
+                destination: point3(0.0, 0.0, 0.0),
             }))
         );
     }
@@ -91,12 +76,8 @@ mod tests {
             "CW X7.5 Y7.5 Z5 I1.25 J1.25 K5".parse(),
             Ok(CMMD::Rotational(RotationalCMMD {
                 ccw: false,
-                x: 7.5,
-                y: 7.5,
-                z: 5.0,
-                i: 1.25,
-                j: 1.25,
-                k: 5.0,
+                destination: point3(7.5, 7.5, 5.0),
+                center: point3(1.25, 1.25, 5.0),
             }))
         );
     }
@@ -108,12 +89,8 @@ mod tests {
             "CCW X5 Y5 Z5 I1.25 J1.25 K5".parse(),
             Ok(CMMD::Rotational(RotationalCMMD {
                 ccw: true,
-                x: 5.0,
-                y: 5.0,
-                z: 5.0,
-                i: 1.25,
-                j: 1.25,
-                k: 5.0,
+                destination: point3(5.0, 5.0, 5.0),
+                center: point3(1.25, 1.25, 5.0),
             }))
         );
     }
@@ -123,7 +100,11 @@ mod tests {
     fn parse_invalid_linear_cmmd() {
         let invalid_inputs = vec!["LIN X- Y0 Z0", "LIN 5 Y5 Z5", "LIX X5 Y5 Z5", "LINX5Y5Z5"];
         for input in invalid_inputs {
-            assert!(input.parse::<CMMD>().is_err(), "Failed to catch invalid input: {}", input);
+            assert!(
+                input.parse::<CMMD>().is_err(),
+                "Failed to catch invalid input: {}",
+                input
+            );
         }
     }
 
@@ -137,7 +118,11 @@ mod tests {
             "CW X7.5Y7.5Z5I1.25J1.25K5",
         ];
         for input in invalid_inputs {
-            assert!(input.parse::<CMMD>().is_err(), "Failed to catch invalid input: {}", input);
+            assert!(
+                input.parse::<CMMD>().is_err(),
+                "Failed to catch invalid input: {}",
+                input
+            );
         }
     }
 
@@ -146,7 +131,11 @@ mod tests {
     fn parse_unrecognized_cmmd() {
         let invalid_inputs = vec!["XYZ X1 Y2 Z3", "ROT X0 Y0 Z0 I0 J0 K1"];
         for input in invalid_inputs {
-            assert!(input.parse::<CMMD>().is_err(), "Failed to catch unrecognized command: {}", input);
+            assert!(
+                input.parse::<CMMD>().is_err(),
+                "Failed to catch unrecognized command: {}",
+                input
+            );
         }
     }
 
@@ -155,7 +144,11 @@ mod tests {
     fn parse_empty_or_whitespace() {
         let invalid_inputs = vec!["", " ", "     "];
         for input in invalid_inputs {
-            assert!(input.parse::<CMMD>().is_err(), "Failed to catch empty or whitespace input: '{}'", input);
+            assert!(
+                input.parse::<CMMD>().is_err(),
+                "Failed to catch empty or whitespace input: '{}'",
+                input
+            );
         }
     }
 }
