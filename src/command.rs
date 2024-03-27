@@ -29,6 +29,33 @@ pub struct RotationalCMMD {
     center: Point3<f64>,
 }
 
+
+
+pub trait CmmdDestination {
+    fn get_destination(self) -> Point3<f64>;
+}
+
+impl CmmdDestination for CMMD {
+    fn get_destination(self) -> Point3<f64> {
+        match self {
+            Self::Linear(x) => x.get_destination(),
+            Self::Rotational(x) => x.get_destination(),
+        }
+    }
+}
+
+impl CmmdDestination for LinearCMMD {
+    fn get_destination(self) -> Point3<f64> {
+        self.destination
+    }
+}
+
+impl CmmdDestination for RotationalCMMD {
+    fn get_destination(self) -> Point3<f64> {
+        self.destination
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
