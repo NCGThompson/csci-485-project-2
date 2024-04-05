@@ -1,8 +1,11 @@
-fn main() {
-    let mut my_string: String = String::new();
-    my_string = String::from("Hello World");
+use std::env;
 
-    println!("{}", my_string);
+fn main() {
+    let args: Vec<String> =  env::args().collect();
+
+    let mut file_path: String = args[1].to_owned();
+
+    println!("{}", file_path);
 
 }
 
