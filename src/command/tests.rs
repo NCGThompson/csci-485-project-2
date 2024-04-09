@@ -2,7 +2,6 @@ mod parseing {
     use super::super::*;
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn parse_linear_cmmds() {
         assert_eq!(
             "LIN X5 Y0 Z0".parse(),
@@ -37,7 +36,6 @@ mod parseing {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn parse_rotational_cmmds_cw() {
         assert_eq!(
             "CW X7.5 Y7.5 Z5 I1.25 J1.25 K5".parse(),
@@ -50,7 +48,6 @@ mod parseing {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn parse_rotational_cmmds_ccw() {
         assert_eq!(
             "CCW X5 Y5 Z5 I1.25 J1.25 K5".parse(),
@@ -63,7 +60,6 @@ mod parseing {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn parse_invalid_linear_cmmd() {
         let invalid_inputs = vec!["LIN X- Y0 Z0", "LIN 5 Y5 Z5", "LIX X5 Y5 Z5", "LINX5Y5Z5"];
         for input in invalid_inputs {
@@ -76,7 +72,6 @@ mod parseing {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn parse_invalid_rotational_cmmd() {
         let invalid_inputs = vec![
             "CW X Y Z I J K",
@@ -94,7 +89,6 @@ mod parseing {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn parse_unrecognized_cmmd() {
         let invalid_inputs = vec!["XYZ X1 Y2 Z3", "ROT X0 Y0 Z0 I0 J0 K1"];
         for input in invalid_inputs {
@@ -107,7 +101,6 @@ mod parseing {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn parse_empty_or_whitespace() {
         let invalid_inputs = vec!["", " ", "     "];
         for input in invalid_inputs {
