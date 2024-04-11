@@ -2,7 +2,7 @@ pub mod interpolation;
 #[cfg(test)]
 mod tests;
 
-use lina::{point3, Point3};
+use lina::{point2, point3, Point2, Point3};
 
 pub use self::interpolation::Interpolateable;
 
@@ -19,6 +19,18 @@ impl std::str::FromStr for CMMD {
         todo!()
         // Once this is finished, remove the corresponding
         // `#[ignore = "not yet implemented"]` attributes below.
+    }
+}
+
+impl From<LinearCMMD> for CMMD {
+    fn from(value: LinearCMMD) -> Self {
+        CMMD::Linear(value)
+    }
+}
+
+impl From<RotationalCMMD> for CMMD {
+    fn from(value: RotationalCMMD) -> Self {
+        CMMD::Rotational(value)
     }
 }
 
@@ -41,7 +53,7 @@ impl LinearCMMD {
 pub struct RotationalCMMD {
     ccw: bool,
     destination: Point3<f64>,
-    center: Point3<f64>,
+    center: Point2<f64>,
 }
 
 impl RotationalCMMD {
@@ -55,16 +67,19 @@ impl RotationalCMMD {
                 && k.is_finite()
         );
 
+        assert_eq!(z, k);
+
         RotationalCMMD {
             ccw: spin,
             destination: point3(x, y, z),
-            center: point3(i, j, k),
+            center: point2(i, j),
         }
     }
 }
 
 /// Every input command type explicitly states the coordinates where the walker should end up.
-/// This is a generic getter for those coordinates.
+/// This is a generic getter for those coordinates. Implentations must guarantee
+/// that all coordinates are finite.
 pub trait CmmdDestination {
     fn get_destination(&self) -> Point3<f64>;
 }
@@ -79,7 +94,7 @@ impl CmmdDestination for CMMD {
     /// use lina::point3;
     ///
     /// let cmmd1 = CMMD::Linear(LinearCMMD::new(1.0, 2.0, 3.0));
-    /// let cmmd2 = CMMD::Rotational(RotationalCMMD::new(false, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
+    /// let cmmd2 = CMMD::Rotational(RotationalCMMD::new(false, 1.0, 2.0, 3.0, 4.0, 5.0, 3.0));
     ///
     /// let destination = cmmd1.get_destination();
     /// assert_eq!(destination, point3(1.0, 2.0, 3.0));
@@ -101,6 +116,7 @@ impl CmmdDestination for CMMD {
 impl CmmdDestination for LinearCMMD {
     #[inline(always)]
     fn get_destination(&self) -> Point3<f64> {
+        // SAFETY: Self::new() checks for inf and nan.
         self.destination
     }
 }
@@ -108,6 +124,7 @@ impl CmmdDestination for LinearCMMD {
 impl CmmdDestination for RotationalCMMD {
     #[inline(always)]
     fn get_destination(&self) -> Point3<f64> {
+        // SAFETY: Self::new() checks for inf and nan.
         self.destination
     }
 }

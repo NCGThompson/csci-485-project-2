@@ -44,7 +44,7 @@ mod parseing {
             Ok(CMMD::Rotational(RotationalCMMD {
                 ccw: false,
                 destination: point3(7.5, 7.5, 5.0),
-                center: point3(1.25, 1.25, 5.0),
+                center: point2(1.25, 1.25),
             }))
         );
     }
@@ -57,7 +57,7 @@ mod parseing {
             Ok(CMMD::Rotational(RotationalCMMD {
                 ccw: true,
                 destination: point3(5.0, 5.0, 5.0),
-                center: point3(1.25, 1.25, 5.0),
+                center: point2(1.25, 1.25),
             }))
         );
     }
@@ -116,6 +116,38 @@ mod parseing {
                 "Failed to catch empty or whitespace input: '{}'",
                 input
             );
+        }
+    }
+}
+
+mod interpolation {
+    use super::super::*;
+    use lina::assert_approx_eq;
+
+    #[test]
+    fn example() {
+        const EX_OUTPUT: [Point3<f64>; 6] = [
+            point3(0.0, 0.98, 0.2),
+            point3(0.0, 1.96, 0.39),
+            point3(0.0, 2.94, 0.59),
+            point3(0.0, 3.92, 0.78),
+            point3(0.0, 4.9, 0.98),
+            point3(0.0, 5.0, 1.0),
+        ];
+        let start = Point3::origin();
+        let input = LinearCMMD::new(0.0, 5.0, 1.0);
+
+        assert_eq!(input.get_count(start), Ok(EX_OUTPUT.len()));
+        for i in 0..EX_OUTPUT.len() {
+            assert_approx_eq!(abs <= 0.005; input.get_nth_point(start, i + 1), EX_OUTPUT[i]);
+        }
+
+        // Next, do the same test but with input wrapped in the CMMD enum.
+        let input = CMMD::from(input);
+
+        assert_eq!(input.get_count(start), Ok(EX_OUTPUT.len()));
+        for i in 0..EX_OUTPUT.len() {
+            assert_approx_eq!(abs <= 0.005; input.get_nth_point(start, i + 1), EX_OUTPUT[i]);
         }
     }
 }
