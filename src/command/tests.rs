@@ -125,7 +125,7 @@ mod interpolation {
     use lina::assert_approx_eq;
 
     #[test]
-    fn example() {
+    fn from_doc() {
         const EX_OUTPUT: [Point3<f64>; 6] = [
             point3(0.0, 0.98, 0.2),
             point3(0.0, 1.96, 0.39),
