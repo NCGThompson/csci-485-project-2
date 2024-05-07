@@ -42,7 +42,7 @@ mod parseing {
         assert_eq!(
             "CW X7.5 Y7.5 Z5 I1.25 J1.25 K5".parse(),
             Ok(CMMD::Rotational(RotationalCMMD {
-                ccw: false,
+                spin: Clockness::CW,
                 destination: point3(7.5, 7.5, 5.0),
                 center: point2(1.25, 1.25),
             }))
@@ -55,7 +55,7 @@ mod parseing {
         assert_eq!(
             "CCW X5 Y5 Z5 I1.25 J1.25 K5".parse(),
             Ok(CMMD::Rotational(RotationalCMMD {
-                ccw: true,
+                spin: Clockness::CCW,
                 destination: point3(5.0, 5.0, 5.0),
                 center: point2(1.25, 1.25),
             }))

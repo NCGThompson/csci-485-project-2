@@ -6,6 +6,29 @@ use lina::{point2, point3, Point2, Point3};
 
 pub use self::interpolation::Interpolateable;
 
+#[derive(Copy, Clone, PartialEq, Eq, Default, Debug)]
+pub enum Clockness {
+    #[default]
+    CW, // clock-wise
+    CCW, //counter-clock-wise
+}
+
+impl Clockness {
+    pub fn new(ccw: bool) -> Clockness {
+        match ccw {
+            false => Clockness::CW,
+            true => Clockness::CCW,
+        }
+    }
+
+    pub fn factor(&self) -> f64 {
+        match self {
+            Clockness::CW => -1.0,
+            Clockness::CCW => 1.0,
+        }
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum CMMD {
     Linear(LinearCMMD),
@@ -51,7 +74,7 @@ impl LinearCMMD {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct RotationalCMMD {
-    ccw: bool,
+    spin: Clockness,
     destination: Point3<f64>,
     center: Point2<f64>,
 }
@@ -70,7 +93,7 @@ impl RotationalCMMD {
         assert_eq!(z, k);
 
         RotationalCMMD {
-            ccw: spin,
+            spin: Clockness::new(spin),
             destination: point3(x, y, z),
             center: point2(i, j),
         }

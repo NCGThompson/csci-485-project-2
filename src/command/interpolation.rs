@@ -1,6 +1,8 @@
-use lina::{point2, ApproxEq as _, Point3};
+use super::{Clockness, CmmdDestination, LinearCMMD, RotationalCMMD, CMMD};
+use lina::{point2, ApproxEq as _, Point3, Radians, Vec3};
+use std::{iter::FusedIterator, ops::Range};
 
-use super::{CmmdDestination, LinearCMMD, RotationalCMMD, CMMD};
+const FIVE_DEGREES: Radians<f64> = Radians(0.08726646259971647);
 
 /// The [`get_nth_point`](Interpolateable::get_nth_point) method gives us one of the points we need to trace the path
 /// according to the project specification, assuming `start` is the destination of the last command.
@@ -87,6 +89,16 @@ impl Interpolateable for RotationalCMMD {
     type Error = &'static str;
 
     fn get_count(&self, start: Point3<f64>) -> Result<usize, Self::Error> {
+        use lina::{atan2, Vec2};
+        fn angle_past(dir: Clockness, point_a: Vec2<f64>, point_base: Vec2<f64>) -> Radians<f64> {
+            let angle_a = atan2(point_a.y, point_a.x);
+            let angle_base = atan2(point_base.y, point_base.x);
+
+            let unnormalized_diff = (angle_a - angle_base) * dir.factor();
+
+            unnormalized_diff.normalized()
+        }
+
         let start2 = point2(start.x, start.y);
         let dest2 = point2(self.destination.x, self.destination.y);
 
@@ -108,12 +120,28 @@ impl Interpolateable for RotationalCMMD {
         {
             return Err("starting point different distance to circle center than destination");
         }
-        todo!()
+
+        let fuzzy_steps = angle_past(self.spin, destination_vector, start_vector) / FIVE_DEGREES;
+
+        Ok(std::cmp::max(1, fuzzy_steps.ceil() as _))
     }
 
     fn get_nth_point(&self, start: Point3<f64>, n: usize) -> Point3<f64> {
-        assert!(n <= self.get_count(start).unwrap());
-        todo!()
+        let count = self.get_count(start).unwrap();
+        assert!(n <= count);
+
+        if n == count {
+            return self.destination;
+        }
+
+        let start_vec: Vec3<f64> = start - lina::point3(self.center.x, self.center.y, 0.0);
+        let mut sdir: lina::SphericalDir<f64> = start_vec.into();
+        assert_eq!(sdir.theta, Radians::quarter_turn());
+
+        sdir.phi += FIVE_DEGREES * self.spin.factor() * n as f64;
+
+        let base: Point3<f64> = lina::point3(self.center.x, self.center.y, self.destination.z);
+        base + sdir.to_unit_vec()
     }
 }
 
@@ -136,3 +164,68 @@ impl Interpolateable for CMMD {
         }
     }
 }
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct CmmdIter {
+    cmmd: CMMD,
+    start: Point3<f64>,
+    range: Range<usize>,
+}
+
+impl CmmdIter {
+    pub fn new(
+        cmmd: CMMD,
+        start: Point3<f64>,
+    ) -> Result<Self, <RotationalCMMD as Interpolateable>::Error> {
+        Ok(CmmdIter {
+            cmmd,
+            start,
+            range: Range {
+                start: 1,
+                end: cmmd.get_count(start)?.checked_add(1).unwrap(),
+            },
+        })
+    }
+}
+
+impl Iterator for CmmdIter {
+    type Item = Point3<f64>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.range
+            .next()
+            .map(|n| self.cmmd.get_nth_point(self.start, n))
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.range
+            .nth(n)
+            .map(|x| self.cmmd.get_nth_point(self.start, x))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.range.size_hint()
+    }
+}
+
+impl DoubleEndedIterator for CmmdIter {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.range
+            .next_back()
+            .map(|x| self.cmmd.get_nth_point(self.start, x))
+    }
+
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        self.range
+            .nth_back(n)
+            .map(|x| self.cmmd.get_nth_point(self.start, x))
+    }
+}
+
+impl ExactSizeIterator for CmmdIter {
+    fn len(&self) -> usize {
+        self.range.len()
+    }
+}
+
+impl FusedIterator for CmmdIter {}
